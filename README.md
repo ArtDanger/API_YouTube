@@ -1,4 +1,4 @@
-This API don't uses YOUTUBE API v.3. It uses "undetected_chromedriver".
+This API don't use YOUTUBE API v.3. It uses "undetected_chromedriver".
 This project publics the shorts video to the YouTube.
 
 You need "Gmail" and Password.
