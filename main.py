@@ -1,5 +1,5 @@
 
-from youtube_undetected_chromedriver import YouTube
+from api_youtube_uc import YouTube
 
 
 def main():

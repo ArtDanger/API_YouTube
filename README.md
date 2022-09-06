@@ -1,8 +1,11 @@
-This API don't use YOUTUBE API v.3. It uses "undetected_chromedriver".
-This project publics the shorts video to the YouTube.
-
+This API doesn't use YOUTUBE API v.3. It uses "undetected_chromedriver"(basic Selenium). 
+This project public the shorts video to the YouTube.
 You need "Gmail" and Password.
+
+I failed to add (--headless) to selenium driver.
+Google don't pass. AND YOU!!! YES you're knowing how to solve this problem.
+Offer solutions!
 
 How use? 
 1. pip install undetected_chromedriver
-2. Watch file "main.py"
+2. Watch file example "main.py"
