@@ -2,8 +2,6 @@ import re
 
 from selenium_driver import BaseClass
 
-import work_with_file_system as work_fs
-
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 
@@ -13,11 +11,10 @@ import random
 
 class YouTube(BaseClass):
 
-    def __init__(self, DRIVER):
-        super(YouTube, self).__init__(DRIVER)
+    def __init__(self):
+        super(YouTube, self).__init__()
 
-        self.DRIVER = DRIVER
-
+        self.DRIVER = self.driver()
 
     def auth(self, login=str, password=str):
 
@@ -41,17 +38,18 @@ class YouTube(BaseClass):
                 self.DRIVER.implicitly_wait(10)
                 self.DRIVER.find_element(By.XPATH, value='//option[./yt-formatted-string[text() = "English (US)"]]').click()
 
-                self.DRIVER.implicitly_wait(10)
-                self.DRIVER.find_element(By.XPATH,
-                                         value='//yt-formatted-string[text() = "Accept all"]').click()
-                time.sleep(random.uniform(2, 3))
+            self.DRIVER.implicitly_wait(10)
+            self.DRIVER.find_element(By.XPATH,
+                                     value='//tp-yt-paper-button[./yt-formatted-string[text() = "Accept all"]]').click()
+            time.sleep(random.uniform(2, 3))
 
         # button войти
-        self.DRIVER.implicitly_wait(10)
-        self.DRIVER.find_element(By.XPATH, value='//tp-yt-paper-button[@aria-label="Sign in"]').click()
+        if self.xpath_exists('//tp-yt-paper-button[@aria-label="Sign in"]'):
+            self.DRIVER.find_element(By.XPATH, value='//tp-yt-paper-button[@aria-label="Sign in"]').click()
 
-
-        # enter login
+        # elif self.xpath_exists(''):
+        #     pass
+        # # enter login
         time.sleep(random.uniform(7, 10))
         self.DRIVER.implicitly_wait(10)
         self.DRIVER.find_element(By.XPATH, value='//input[@type="email"]').send_keys(login)
@@ -75,12 +73,10 @@ class YouTube(BaseClass):
         if self.xpath_exists('//tp-yt-paper-button[@aria-label="Sign in"]'):
             self.auth()
 
-
         return self.prepare_studio()
 
     def create_chanel(self):
         pass
-
 
     def prepare_studio(self):
 
@@ -111,14 +107,13 @@ class YouTube(BaseClass):
         elif copyright == 'No issues found':
             print(copyright)
 
-        elif re.findall(fr'(?im)\bВладелец разрешает\S*\b', copyright) == "Владелец разрешает":
+        elif re.findall(fr'(?im)\bThe owner allows\S*\b', copyright) == " The owner allows":
             print(copyright)
 
         else:
             print(type(copyright))
             print(copyright)
             raise Exception("video is blocked or prohibited by copyright")
-
 
     # press botton "Upload video"
     def page1_upload_video(self, path_to_video=str):
@@ -127,54 +122,54 @@ class YouTube(BaseClass):
         if self.xpath_exists('//input[@type="file"]'):
             print("Loadin video...")
             self.DRIVER.find_element(By.XPATH, value='//input[@type="file"]').send_keys(path_to_video)
-            print("Video Uploaded")
 
     def page2_upload_video(self, title=str, tags=str):
 
         # title
-        self.DRIVER.implicitly_wait(10)
-        self.DRIVER.find_element(By.XPATH, value='//div[@id="textbox"]').clear()
-        self.DRIVER.find_element(By.XPATH, value='//div[@id="textbox"]').send_keys(title)
-        # check exists the radio-button "for kids"
-        if self.xpath_exists('//tp-yt-paper-radio-button[@name="VIDEO_MADE_FOR_KIDS_MFK"]'):
-            # click on the radio-button "for kids"
-            self.DRIVER.find_element(By.XPATH, value='//tp-yt-paper-radio-button').click()
+        if self.xpath_exists('//div[@id="textbox"]'):
+            self.DRIVER.find_element(By.XPATH, value='//div[@id="textbox"]').clear()
+            self.DRIVER.implicitly_wait(5)
+            self.DRIVER.find_element(By.XPATH, value='//div[@id="textbox"]').send_keys(title)
 
-        # open new param, pressed button "Show more"
-        self.DRIVER.find_element(By.XPATH, value='//div[text()="Show more"]').click()
+            # check exists the radio-button "for kids"
+            if self.xpath_exists('//tp-yt-paper-radio-button[@name="VIDEO_MADE_FOR_KIDS_MFK"]'):
+                # click on the radio-button "for kids"
+                self.DRIVER.find_element(By.XPATH, value='//tp-yt-paper-radio-button').click()
 
-        # add tags
-        time.sleep(random.uniform(5, 8))
-        self.DRIVER.implicitly_wait(10)
-        self.DRIVER.find_element(By.XPATH, value='//input[@aria-label="Tags"]').clear()
-        self.DRIVER.find_element(By.XPATH, value='//input[@aria-label="Tags"]').send_keys('#shorts' + str(tags))
+            # open new param, pressed button "Show more"
+            self.DRIVER.find_element(By.XPATH, value='//div[text()="Show more"]').click()
 
-        # press button "Next"
-        if self.xpath_exists('//div[text()="Next"]'):
+            # add tags
+            time.sleep(random.uniform(5, 8))
+            self.DRIVER.implicitly_wait(10)
+            self.DRIVER.find_element(By.XPATH, value='//input[@aria-label="Tags"]').clear()
+            self.DRIVER.find_element(By.XPATH, value='//input[@aria-label="Tags"]').send_keys('#shorts' + str(tags))
 
-            # from page "information" to "Adds"
-            self.DRIVER.find_element(By.XPATH, value='//div[text()="Next"]').click()
+            # press button "Next"
+            if self.xpath_exists('//div[text()="Next"]'):
+                # from page "information" to "Adds"
+                self.DRIVER.find_element(By.XPATH, value='//div[text()="Next"]').click()
 
     def page3_upload_video(self):
         # from page "Adds" to "Checker YouTube"
         time.sleep(random.uniform(2, 4))
-        self.DRIVER.implicitly_wait(10)
-        self.DRIVER.find_element(By.XPATH, value='//div[text()="Next"]').click()
+        if self.xpath_exists('//div[text()="Next"]'):
+            self.DRIVER.find_element(By.XPATH, value='//div[text()="Next"]').click()
 
     def page4_upload_video(self):
 
-        # check uploaded video on the copyright and baneded content
+        # check uploaded video on the copyright and banded content
         self.founder_issues()
 
         # from page "Checker YouTube" to access
         time.sleep(random.uniform(2, 4))
-        self.DRIVER.implicitly_wait(10)
-        self.DRIVER.find_element(By.XPATH, value='//div[text()="Next"]').click()
+        if self.xpath_exists('//div[text()="Next"]'):
+            self.DRIVER.find_element(By.XPATH, value='//div[text()="Next"]').click()
 
     def page5_upload_video(self):
         # select radio-button public access
         time.sleep(random.uniform(1, 4))
-        self.DRIVER.implicitly_wait(10)
+        self.DRIVER.implicitly_wait(5)
         self.DRIVER.find_element(By.XPATH, value='//tp-yt-paper-radio-button[@name="PUBLIC"]/div').click()
 
         # while upload not completed
@@ -188,8 +183,8 @@ class YouTube(BaseClass):
 
         # press button upload
         time.sleep(random.uniform(1, 4))
-        self.DRIVER.implicitly_wait(10)
-        self.DRIVER.find_element(By.XPATH, value='//ytcp-button[@id="done-button"]').click()
+        if self.xpath_exists('//div[text()="Next"]'):
+            self.DRIVER.find_element(By.XPATH, value='//ytcp-button[@id="done-button"]').click()
 
     def upload_video(self, path_to_file=str, title=str, tags=str):
         # press button "upload video" on the studia YouTube
@@ -212,3 +207,7 @@ class YouTube(BaseClass):
         self.page4_upload_video()
 
         self.page5_upload_video()
+
+        # finish work with Driver
+        self.DRIVER.close()
+        self.DRIVER.quit()
