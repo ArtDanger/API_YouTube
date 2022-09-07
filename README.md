@@ -8,4 +8,6 @@ Offer solutions!
 
 How use? 
 1. pip install undetected_chromedriver
-2. Watch file example "main.py"
+2. Create YouTube channel(go to the YouTube Studio for the first time)
+3. Watch file example "main.py"
+
