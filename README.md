@@ -6,8 +6,8 @@ I failed to add (--headless) to selenium driver.
 Google don't pass. AND YOU!!! YES you're knowing how to solve this problem.
 Offer solutions!
 
-How use? 
-1. pip install undetected_chromedriver
+#How use? 
+1. pip install api-youtube-uc
 2. Create YouTube channel(go to the YouTube Studio for the first time)
 3. Watch file example "main.py"
 
