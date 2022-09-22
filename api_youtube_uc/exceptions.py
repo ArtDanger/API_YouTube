@@ -1,8 +1,8 @@
 class YouTubeException(Exception):
     """Generic exception that all other YouTube errors are children of."""
 
-    def __init__(self, message):
-        self.message = message
+    def __init__(self, *args):
+        self.message = args[0] if args else None
         super().__init__(self.message)
 
     def __str__(self):
@@ -21,5 +21,11 @@ class FieldInvalidException(YouTubeException):
     """This exception occurs when the field is in invalid"""
 
 
-class LimitSpent(YouTubeException):
+class LimitSpentException(YouTubeException):
     """Daily upload limit reached"""
+
+
+class NotBackupCodeException(YouTubeException):
+    """Backup code not available"""
+
+
