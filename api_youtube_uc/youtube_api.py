@@ -236,6 +236,11 @@ class YouTube(BaseClass):
         else:
             NotFoundException("Tags field not found.")
 
+    def __send_feedback(self):
+        # send feedback
+        if self.xpath_exists('//button[@key="cancel"]'):
+            self.DRIVER.find_element(By.XPATH, value='//button[@key="cancel"]').click()
+
     # press button "Upload video"
     def _page1_upload_video(self, path_to_video=str):
 
@@ -308,14 +313,20 @@ class YouTube(BaseClass):
 
     def _page5_upload_video(self):
         # select radio-button public access
+        self.DRIVER.execute_script("window.onbeforeunload = function() {};")
+
         time.sleep(random.uniform(.3, 1))
         if self.xpath_exists('//tp-yt-paper-radio-button[@name="PUBLIC"]/div'):
             self.DRIVER.find_element(By.XPATH, value='//tp-yt-paper-radio-button[@name="PUBLIC"]/div').click()
             time.sleep(random.uniform(.3, 1))
 
+        self.__send_feedback()
+
         # press button upload
         if self.xpath_exists('//ytcp-button[@id="done-button"]'):
             self.DRIVER.find_element(By.XPATH, value='//ytcp-button[@id="done-button"]').click()
+
+        self.__send_feedback()
 
     def press_button_upload(self):
         
@@ -331,6 +342,7 @@ class YouTube(BaseClass):
     def upload_video(self, path_to_file=str, title=str, tags=list):
         """Upload shorts video on the YouTube"""
         try:
+
             self.__prepare_studio()
             # press button "upload video" on the studio YouTube
             self.press_button_upload()
@@ -348,15 +360,20 @@ class YouTube(BaseClass):
 
             self._page5_upload_video()
 
+            self.__send_feedback()
+
             time.sleep(random.uniform(20, 40))
 
         except UnexpectedAlertPresentException:
+
             time.sleep(random.uniform(2, 5))
             pyautogui.press('tab')
             time.sleep(random.uniform(.5, 1.4))
             pyautogui.press('enter')
 
-            time.sleep(random.uniform(20, 40))
+            self.__send_feedback()
+
+            time.sleep(random.uniform(30, 50))
 
     def get_backup_code(self, login, password, backup_code):
         """

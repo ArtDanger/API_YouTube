@@ -14,13 +14,8 @@ class BaseClass:
 
         chrome_options = uc.ChromeOptions()
 
-        # chrome_options.add_argument("--disable-dev-shm-usage")
-        # chrome_options.add_argument("--no-sandbox")
-        # chrome_options.add_argument("--disable-gpu")  # if headless
-       # authentication
-        # chrome_options.add_argument("--no-default-browser-check")
-        chrome_options.add_argument("--disable-extensions")  # отключает рассширения
-        chrome_options.add_argument("--disable-popup-blocking")  # отключает блокировку всплывающих окон
+        chrome_options.add_argument("--disable-extensions")
+        chrome_options.add_argument("--disable-popup-blocking")
         chrome_options.add_argument("--incognito")
 
         self.DRIVER = uc.Chrome(options=chrome_options)
@@ -40,24 +35,3 @@ class BaseClass:
 
         return exist
 
-    def css_selector_exists(self, selector):
-
-        try:
-            self.DRIVER.implicitly_wait(15)
-            self.DRIVER.find_element(By.CSS_SELECTOR, value=selector)
-            exist = True
-        except NoSuchElementException:
-            exist = False
-
-        return exist
-
-    def id_exists(self, id_el):
-
-        try:
-            self.DRIVER.implicitly_wait(15)
-            self.DRIVER.find_element(By.ID, value=id_el)
-            exist = True
-        except NoSuchElementException:
-            exist = False
-
-        return exist
