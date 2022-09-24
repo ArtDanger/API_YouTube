@@ -7,9 +7,9 @@ here = os.path.abspath(os.path.dirname(__file__))
 with codecs.open(os.path.join(here, "README.md"), encoding="utf-8") as fh:
     long_description = "\n" + fh.read()
 
-VERSION = '0.0.2'
+VERSION = '3.4'
 DESCRIPTION = 'Upload shorts video to the YouTube channel'
-LONG_DESCRIPTION = "It doesn't use APIv.3 and. Made on the basis of the Selenium(undetected_chromedriver)"
+LONG_DESCRIPTION = "It doesn't use API owned by Youtube. Made on the basis of the Selenium(undetected_chromedriver)"
 
 # Setting up
 setup(

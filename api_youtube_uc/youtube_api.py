@@ -85,7 +85,7 @@ class YouTube(BaseClass):
         else:
             raise NotBackupCodeException("Backup option is not found.")
 
-    def __auth(self, login=str, password=str, backup_code=None):
+    def _auth(self, login=str, password=str, backup_code=None):
 
         # enter login
         self.DRIVER.implicitly_wait(10)
@@ -136,11 +136,11 @@ class YouTube(BaseClass):
             self.DRIVER.get(
                 "https://accounts.google.com/v3/signin/identifier?dsh=S-1844731254%3A1663145018237568&continue=https%3A%2F%2Fwww.youtube.com%2Fsignin%3Faction_handle_signin%3Dtrue%26app%3Ddesktop%26hl%3Duk%26next%3D%252F&ec=65620&hl=uk&passive=true&service=youtube&uilel=3&flowName=GlifWebSignIn&flowEntry=ServiceLogin&ifkv=AQDHYWqI46XR6XdqJ4nm8wk23jwJZQXfO8XxLsx77ETG0EfwFoRGFNhLmb2bfa7pBdyt4wgKphy7")
 
-        use_backup_code = self.__auth(login, password, backup_codes)
+        use_backup_code = self._auth(login, password, backup_codes)
 
         # This func links on the self, if not icon account
         if self.xpath_exists('//tp-yt-paper-button[@aria-label="Sign in"]'):
-            self.__auth(login, password, backup_codes)
+            self._auth(login, password, backup_codes)
 
         return use_backup_code
 
@@ -242,7 +242,7 @@ class YouTube(BaseClass):
             self.DRIVER.find_element(By.XPATH, value='//button[@key="cancel"]').click()
 
     # press button "Upload video"
-    def _page1_upload_video(self, path_to_video=str):
+    def __page1_upload_video(self, path_to_video=str):
 
         # field for upload vidio on the youtube
         if self.xpath_exists('//input[@type="file"]'):
@@ -250,7 +250,7 @@ class YouTube(BaseClass):
         else:
             raise NotFoundException("Video was not uploaded, XPATH may be missing.")
 
-    def _page2_upload_video(self, title, tags):
+    def __page2_upload_video(self, title, tags):
 
         # Check have limit today
         if self.xpath_exists('//div[text()="Daily upload limit reached"]'):
@@ -289,15 +289,15 @@ class YouTube(BaseClass):
             self.DRIVER.find_element(By.XPATH, value='//div[text()="Next"]').click()
 
         else:
-            self._page2_upload_video(title, tags)
+            self.__page2_upload_video(title, tags)
 
-    def _page3_upload_video(self):
+    def __page3_upload_video(self):
         # from page "Adds" to "Checker YouTube"
         time.sleep(random.uniform(.3, 1))
         if self.xpath_exists('//div[text()="Next"]'):
             self.DRIVER.find_element(By.XPATH, value='//div[text()="Next"]').click()
 
-    def _page4_upload_video(self):
+    def __page4_upload_video(self):
 
         # check uploaded video on the copyright and banded content
         self.__founder_issues()
@@ -309,9 +309,9 @@ class YouTube(BaseClass):
             self.DRIVER.find_element(By.XPATH, value='//div[text()="Next"]').click()
 
         else:
-            self._page4_upload_video()
+            self.__page4_upload_video()
 
-    def _page5_upload_video(self):
+    def __page5_upload_video(self):
         # select radio-button public access
         self.DRIVER.execute_script("window.onbeforeunload = function() {};")
 
@@ -328,7 +328,7 @@ class YouTube(BaseClass):
 
         self.__send_feedback()
 
-    def press_button_upload(self):
+    def __press_button_upload(self):
         
         # press button "upload video" on the studio YouTube
         if self.xpath_exists('//ytcp-icon-button[@id="upload-icon"]'):
@@ -345,20 +345,20 @@ class YouTube(BaseClass):
 
             self.__prepare_studio()
             # press button "upload video" on the studio YouTube
-            self.press_button_upload()
+            self.__press_button_upload()
 
             time.sleep(random.uniform(.3, 1))
 
             # pass page #1 for uploaded video on the YouTube
-            self._page1_upload_video(path_to_video=path_to_file)
+            self.__page1_upload_video(path_to_video=path_to_file)
 
-            self._page2_upload_video(title=title, tags=tags)
+            self.__page2_upload_video(title=title, tags=tags)
 
-            self._page3_upload_video()
+            self.__page3_upload_video()
 
-            self._page4_upload_video()
+            self.__page4_upload_video()
 
-            self._page5_upload_video()
+            self.__page5_upload_video()
 
             self.__send_feedback()
 
@@ -387,7 +387,7 @@ class YouTube(BaseClass):
             self.DRIVER.find_element(By.XPATH, '//a[text()="Sign in"]').click()
 
             # call authorization
-            self.__auth(login, password, backup_code)
+            self._auth(login, password, backup_code)
 
         if self.xpath_exists('//a[@aria-label="2-Step Verification"]'):
             self.DRIVER.find_element(By.XPATH, '//a[@aria-label="2-Step Verification"]').click()
