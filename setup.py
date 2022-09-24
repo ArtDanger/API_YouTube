@@ -21,7 +21,7 @@ setup(
     long_description_content_type="text/markdown",
     long_description=long_description,
     packages=find_packages(),
-    install_requires=['undetected_chromedriver', "pyperclip"],
+    install_requires=['undetected_chromedriver', "pyperclip", "pyautogui"],
     keywords=['python', 'selenium', 'youtube studio', 'youtube', 'api', 'upload', 'video', 'shorts video',
               'auth google', 'undetected_chromedriver', "uc"],
     classifiers=[
