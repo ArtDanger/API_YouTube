@@ -23,7 +23,8 @@ setup(
     packages=find_packages(),
     install_requires=['undetected_chromedriver', "pyperclip", "pyautogui"],
     keywords=['python', 'selenium', 'youtube studio', 'youtube', 'api', 'upload', 'video', 'shorts video',
-              'auth google', 'undetected_chromedriver', "uc"],
+              'auth google', 'undetected_chromedriver', "uc", "api_youtube_uc", "api_youtube", "youtube_api",
+              "api youtube", "youtube api"],
     classifiers=[
         "Development Status :: 1 - Planning",
         "Intended Audience :: Developers",
