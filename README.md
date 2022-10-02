@@ -1,4 +1,4 @@
-This API doesn't use API owned by YouTube. It uses "undetected_chromedriver"(basic Selenium).
+This API doesn't use API owned by YouTube. It uses "[undetected_chromedriver](https://github.com/ultrafunkamsterdam/undetected-chromedriver)"(basic Selenium).
 
 This project public the shorts video to the YouTube.
 You'll need: @gmail, Password and backup_code.
