@@ -13,10 +13,6 @@ class NotFoundException(YouTubeException):
     """YouTube indicated that this object does not exist."""
 
 
-class VideoCopyrightException(YouTubeException):
-    """When uploading to YouTube, the video was blocked due to copyright."""
-
-
 class FieldInvalidException(YouTubeException):
     """This exception occurs when the field is in invalid"""
 
@@ -29,3 +25,9 @@ class NotBackupCodeException(YouTubeException):
     """Backup code not available"""
 
 
+class NotExistsProfileException(YouTubeException):
+    """You don't have profile by path in Chrom on the Windows10"""
+
+
+class PreventedThisUpload(YouTubeException):
+    """YouTube prevented this upload because it’s a copy of a video we removed in the past."""

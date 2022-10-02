@@ -15,16 +15,18 @@ from selenium.common.exceptions import UnexpectedAlertPresentException
 
 class YouTube(BaseClass):
 
-    def __init__(self):
+    def __init__(self, profile, browser_executable_path=None):
         super(YouTube, self).__init__()
         self.DRIVER = None
+        self.profile = profile
+        self.browser_executable_path = browser_executable_path
 
     def __enter__(self):
-        self.DRIVER = self.driver()
+        self.DRIVER = self._driver(self.profile, self.browser_executable_path)
+
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.DRIVER.close()
         self.DRIVER.quit()
 
     def __prepare_studio(self):
@@ -97,7 +99,8 @@ class YouTube(BaseClass):
         self.__enter_password(password)
 
         # func for authorization through backup code
-        if self.xpath_exists('//button[./span[text()="Try another way"]]') or self.xpath_exists('//div[./div[text()="Enter one of your 8-digit backup codes"]]'):
+        if self.xpath_exists('//button[./span[text()="Try another way"]]') or self.xpath_exists(
+                '//div[./div[text()="Enter one of your 8-digit backup codes"]]'):
             if backup_code is not None:
 
                 self.__backup_code(backup_code)
@@ -156,30 +159,6 @@ class YouTube(BaseClass):
             time.sleep(5)
             self.__status()
 
-    def __founder_issues(self):
-
-        # checker copyright(авторское право)
-
-        copyright_elem = str(self.DRIVER.find_element(By.XPATH, value='//div[@id="results-description"]').text)
-        if copyright_elem == 'Checking if your video contains any copyrighted content':
-            print("... check copyright ...")
-            time.sleep(10)
-            self.__founder_issues()
-
-        elif copyright_elem == 'No issues found':
-            print(copyright_elem)
-
-        elif copyright_elem.split('. ')[1] == 'People in some countries can’t watch your video.':
-            print(copyright_elem)
-
-        elif copyright_elem.split('. ')[1] == "The owner allows the content to be used on YouTube.":
-            print(copyright_elem)
-
-        else:
-            input("New copytigt_elem, copy past and press enter: ")
-            print(copyright_elem)
-            raise VideoCopyrightException("When uploading to YouTube, the video was blocked due to copyright.")
-
     def __send_title(self, text=str):
 
         # fix Error ChromeDriver only supports characters in the BMP
@@ -193,6 +172,7 @@ class YouTube(BaseClass):
             act = ActionChains(self.DRIVER)
             time.sleep(.5)
             act.move_to_element(title_elem)
+            self.DRIVER.find_element(By.XPATH, value='//div[@id="textbox"]').send_keys(Keys.BACKSPACE)
             title_elem.clear()
             act.click(title_elem)
 
@@ -248,13 +228,19 @@ class YouTube(BaseClass):
         if self.xpath_exists('//input[@type="file"]'):
             self.DRIVER.find_element(By.XPATH, value='//input[@type="file"]').send_keys(path_to_video)
         else:
-            raise NotFoundException("Video was not uploaded, XPATH may be missing.")
+            input("Copy xpath: ")
+            # raise NotFoundException("Video was not uploaded, XPATH may be missing.")
 
     def __page2_upload_video(self, title, tags):
 
         # Check have limit today
         if self.xpath_exists('//div[text()="Daily upload limit reached"]'):
             raise LimitSpentException("Daily upload limit reached")
+
+        if self.xpath_exists('//div[text()="Processing abandoned"]'):
+            text_error = self.DRIVER.find_element(By.XPATH,
+                                                  value='//yt-formatted-string[@class="error-details style-scope ytcp-uploads-dialog"]').text
+            raise PreventedThisUpload(text_error)
 
         self.__send_title(title)
 
@@ -299,17 +285,11 @@ class YouTube(BaseClass):
 
     def __page4_upload_video(self):
 
-        # check uploaded video on the copyright and banded content
-        self.__founder_issues()
-
         # from page "Checker YouTube" to access
         time.sleep(random.uniform(.3, 1))
 
         if self.xpath_exists('//div[text()="Next"]'):
             self.DRIVER.find_element(By.XPATH, value='//div[text()="Next"]').click()
-
-        else:
-            self.__page4_upload_video()
 
     def __page5_upload_video(self):
         # select radio-button public access
@@ -329,11 +309,15 @@ class YouTube(BaseClass):
         self.__send_feedback()
 
     def __press_button_upload(self):
-        
+
         # press button "upload video" on the studio YouTube
         if self.xpath_exists('//ytcp-icon-button[@id="upload-icon"]'):
             time.sleep(random.uniform(4, 8))
             self.DRIVER.find_element(By.XPATH, value='//ytcp-icon-button[@id="upload-icon"]').click()
+
+        elif self.xpath_exists('//ytcp-button[@id="create-icon"]'):
+            self.DRIVER.find_element(By.XPATH, value='//ytcp-button[@id="create-icon"]').click()
+            self.click_element('//tp-yt-paper-item[@test-id="upload-beta"]')
 
         else:
             # raise NotFoundException('icon-button "upload-icon" not found.')
