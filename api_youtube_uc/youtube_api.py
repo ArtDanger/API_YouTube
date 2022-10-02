@@ -15,11 +15,11 @@ from selenium.common.exceptions import UnexpectedAlertPresentException
 
 class YouTube(BaseClass):
 
-    def __init__(self, profile, browser_executable_path=None):
+    def __init__(self, profile=str, browser_executable_path=None):
         super(YouTube, self).__init__()
         self.DRIVER = None
-        self.profile = profile
-        self.browser_executable_path = browser_executable_path
+        self.profile = profile  # your profile
+        self.browser_executable_path = browser_executable_path  # Default Chrome
 
     def __enter__(self):
         self.DRIVER = self._driver(self.profile, self.browser_executable_path)
