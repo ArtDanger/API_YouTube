@@ -11,7 +11,7 @@ from .exceptions import *
 
 class BaseClass:
 
-    def __init__(self):  # add user-agent
+    def __init__(self):
         self.DRIVER = None
 
     @staticmethod
@@ -24,7 +24,7 @@ class BaseClass:
         profiles = []
         absolute_path_profiles = glob.glob(
             os.environ['USERPROFILE'] + r"\AppData\Local\Google\Chrome\User Data\Profile" + '*')
-        # return absolute_path_profiles
+
         for path_to_profile in absolute_path_profiles:  # get list profiles number
             profiles.append(path_to_profile.split("\\")[-1])
 
@@ -33,21 +33,33 @@ class BaseClass:
 
         raise NotExistsProfileException("You don't have any profiles by path in Chrom on the Windows10")
 
-    def _driver(self, profile, browser_executable_path):
+    def _driver(self, profile, browser_executable_path, user_data_dir):
         """
         Call driver via undetected_driver;
 
-        if you pass profile:
+        if you pass user_data_dir:
+            profile: user_data_dir(the most correct and safe way)
+
+        elif you pass profile:
             profile: your (Profile num)
+            Your profile is passed through chrome's option
+
         else:
             driver opens the incognito webpages and deletes cookies.
             Then you can use authorization on the YouTube
 
         return: driver
         """
-        options = uc.ChromeOptions()
 
-        if profile:
+        if user_data_dir:
+            self.DRIVER = uc.Chrome(
+                user_data_dir=user_data_dir,
+                browser_executable_path=browser_executable_path
+            )
+
+        elif profile:
+
+            options = uc.ChromeOptions()
 
             # match on windows 10
             options.add_argument(fr"--user-data-dir={os.environ['USERPROFILE']}\AppData\Local\Google\Chrome\User Data")
@@ -55,19 +67,20 @@ class BaseClass:
 
             self.DRIVER = uc.Chrome(options,
                                     browser_executable_path=browser_executable_path,
-                                    version_main=96,
                                     use_subprocess=True)
+
         else:
 
+            options = uc.ChromeOptions()
             options.add_argument("--incognito")
 
             self.DRIVER = uc.Chrome(options,
                                     browser_executable_path=browser_executable_path,
-                                    version_main=96,
                                     use_subprocess=True)
             self.DRIVER.delete_all_cookies()
 
         self.DRIVER.maximize_window()
+
         return self.DRIVER
 
     def xpath_exists(self, xpath):

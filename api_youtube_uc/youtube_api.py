@@ -14,15 +14,28 @@ from selenium.common.exceptions import UnexpectedAlertPresentException
 
 
 class YouTube(BaseClass):
+    """
+    :profile = "Profile num" to be your Chrome "User Data"
+    :browser_executable_path = (default path to Chrome) path to executable browser
+    :user_data_dir = path copy your "User Data" with your only one profile (the most correct and safe way)
+    """
 
-    def __init__(self, profile=str, browser_executable_path=None):
+    def __init__(self,
+                 profile=str,
+                 browser_executable_path=None,
+                 user_data_dir=str):
+
         super(YouTube, self).__init__()
         self.DRIVER = None
-        self.profile = profile  # your profile
-        self.browser_executable_path = browser_executable_path  # Default Chrome
+        self.profile = profile
+        self.browser_executable_path = browser_executable_path
+        self.user_data_dir = user_data_dir
 
     def __enter__(self):
-        self.DRIVER = self._driver(self.profile, self.browser_executable_path)
+        self.DRIVER = self._driver(profile=self.profile,
+                                   user_data_dir=self.user_data_dir,
+                                   browser_executable_path=self.browser_executable_path
+                                   )
 
         return self
 
@@ -32,8 +45,8 @@ class YouTube(BaseClass):
     def __prepare_studio(self):
 
         self.DRIVER.get("https://studio.youtube.com/channel/")
+        time.sleep(random.uniform(1, 2))
         self.DRIVER.execute_script("window.onbeforeunload = function() {};")
-        time.sleep(random.uniform(7, 10))
 
     def __cookie_agreement(self):
 
@@ -156,29 +169,16 @@ class YouTube(BaseClass):
                                               value='//span[@class="progress-label style-scope ytcp-video-upload-progress"]').text
 
         if not status_now.split(".")[0] == "Checks complete":
-            time.sleep(5)
+            time.sleep(random.uniform(.1, 1))
             self.__status()
 
     def __send_title(self, text=str):
 
-        # fix Error ChromeDriver only supports characters in the BMP
-        # now you can send emoji
         if self.xpath_exists('//div[@id="textbox"]'):
-            # Ctrl + c
-            pyperclip.copy(text)
 
             title_elem = self.DRIVER.find_element(By.XPATH, value='//div[@id="textbox"]')
-
-            act = ActionChains(self.DRIVER)
-            time.sleep(.5)
-            act.move_to_element(title_elem)
-            self.DRIVER.find_element(By.XPATH, value='//div[@id="textbox"]').send_keys(Keys.BACKSPACE)
             title_elem.clear()
-            act.click(title_elem)
-
-            # Ctrl + v
-            act.key_down(Keys.CONTROL).send_keys("v").key_up(Keys.CONTROL)
-            act.perform()
+            title_elem.send_keys(text)
 
             # if title not working, call error
             if self.xpath_exists(
@@ -195,23 +195,20 @@ class YouTube(BaseClass):
             tags_elem = self.DRIVER.find_element(By.XPATH, value='//input[@aria-label="Tags"]')
             tags_elem.clear()
             hashtags.insert(0, "#shorts")
+            hashtags = tuple(hashtags)
 
             act = ActionChains(self.DRIVER)
 
             for tag in hashtags:
-                # Copy
-                pyperclip.copy(tag)
                 act.click(tags_elem)
-
-                # Past
-                act.key_down(Keys.CONTROL).send_keys("v").key_up(Keys.CONTROL)
-
-                # performance of actions
                 act.perform()
+
+                tags_elem.send_keys(tag)
+                tags_elem.send_keys(Keys.ENTER)
 
             if self.xpath_exists(
                     '//ytcp-form-input-container[@class="style-scope ytcp-video-metadata-editor-advanced" and @invalid]'):
-                raise FieldInvalidException("Field for tags is filled incorrectly. Most likely you have a long tag")
+                raise FieldInvalidException("Field for tags is filled incorrectly. Most likely you have a long tag.")
 
         else:
             NotFoundException("Tags field not found.")
@@ -252,7 +249,7 @@ class YouTube(BaseClass):
             # open new param, pressed button "Show more"
             if self.xpath_exists('//div[text()="Show more"]'):
                 self.DRIVER.find_element(By.XPATH, value='//div[text()="Show more"]').click()
-                time.sleep(random.uniform(.3, 1))
+                time.sleep(random.uniform(.1, 1))
 
             else:
                 raise NotFoundException('button "Show more" not found.')
@@ -279,14 +276,14 @@ class YouTube(BaseClass):
 
     def __page3_upload_video(self):
         # from page "Adds" to "Checker YouTube"
-        time.sleep(random.uniform(.3, 1))
+        time.sleep(random.uniform(.1, 1))
         if self.xpath_exists('//div[text()="Next"]'):
             self.DRIVER.find_element(By.XPATH, value='//div[text()="Next"]').click()
 
     def __page4_upload_video(self):
 
         # from page "Checker YouTube" to access
-        time.sleep(random.uniform(.3, 1))
+        time.sleep(random.uniform(.1, 1))
 
         if self.xpath_exists('//div[text()="Next"]'):
             self.DRIVER.find_element(By.XPATH, value='//div[text()="Next"]').click()
@@ -295,10 +292,10 @@ class YouTube(BaseClass):
         # select radio-button public access
         self.DRIVER.execute_script("window.onbeforeunload = function() {};")
 
-        time.sleep(random.uniform(.3, 1))
+        time.sleep(random.uniform(.1, 1))
         if self.xpath_exists('//tp-yt-paper-radio-button[@name="PUBLIC"]/div'):
             self.DRIVER.find_element(By.XPATH, value='//tp-yt-paper-radio-button[@name="PUBLIC"]/div').click()
-            time.sleep(random.uniform(.3, 1))
+            time.sleep(random.uniform(.1, 1))
 
         self.__send_feedback()
 
@@ -312,7 +309,6 @@ class YouTube(BaseClass):
 
         # press button "upload video" on the studio YouTube
         if self.xpath_exists('//ytcp-icon-button[@id="upload-icon"]'):
-            time.sleep(random.uniform(4, 8))
             self.DRIVER.find_element(By.XPATH, value='//ytcp-icon-button[@id="upload-icon"]').click()
 
         elif self.xpath_exists('//ytcp-button[@id="create-icon"]'):
@@ -331,7 +327,7 @@ class YouTube(BaseClass):
             # press button "upload video" on the studio YouTube
             self.__press_button_upload()
 
-            time.sleep(random.uniform(.3, 1))
+            time.sleep(random.uniform(.1, 1))
 
             # pass page #1 for uploaded video on the YouTube
             self.__page1_upload_video(path_to_video=path_to_file)
@@ -346,7 +342,7 @@ class YouTube(BaseClass):
 
             self.__send_feedback()
 
-            time.sleep(random.uniform(20, 40))
+            time.sleep(random.uniform(1, 3))
 
         except UnexpectedAlertPresentException:
 
@@ -357,7 +353,7 @@ class YouTube(BaseClass):
 
             self.__send_feedback()
 
-            time.sleep(random.uniform(30, 50))
+            time.sleep(random.uniform(10, 15))
 
     def get_backup_code(self, login, password, backup_code):
         """
