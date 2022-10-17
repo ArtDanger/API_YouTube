@@ -1,16 +1,19 @@
 import time
 import random
 
-import pyperclip
 import pyautogui
+import pyperclip
+from selenium.webdriver import ActionChains
 
 from .selenium_driver import BaseClass
 from .exceptions import *
 
-from selenium.webdriver import ActionChains
+from selenium.webdriver.common.alert import Alert
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import UnexpectedAlertPresentException
+from selenium.common.exceptions import UnexpectedAlertPresentException, TimeoutException
 
 
 class YouTube(BaseClass):
@@ -26,7 +29,6 @@ class YouTube(BaseClass):
                  user_data_dir=str):
 
         super(YouTube, self).__init__()
-        self.DRIVER = None
         self.profile = profile
         self.browser_executable_path = browser_executable_path
         self.user_data_dir = user_data_dir
@@ -36,17 +38,33 @@ class YouTube(BaseClass):
                                    user_data_dir=self.user_data_dir,
                                    browser_executable_path=self.browser_executable_path
                                    )
+        self.act = ActionChains(self.DRIVER)
 
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        self.DRIVER.close()
         self.DRIVER.quit()
 
     def __prepare_studio(self):
+        links = [
+            'https://mail.google.com',
+            'https://news.google.com',
+            'https://www.google.nl',
+            'https://www.youtube.com',
+            'https://www.google.nl',
+            'https://translate.google.nl',
+            'https://www.amazon.nl/',
+        ]
 
+        self.DRIVER.get(random.choice(links))
+        time.sleep(random.uniform(2, 5))
+
+        self.DRIVER.get(random.choice(links))
+        time.sleep(random.uniform(2, 5))
+
+        # attend YouTube Studio
         self.DRIVER.get("https://studio.youtube.com/channel/")
-        time.sleep(random.uniform(1, 2))
-        self.DRIVER.execute_script("window.onbeforeunload = function() {};")
 
     def __cookie_agreement(self):
 
@@ -160,201 +178,6 @@ class YouTube(BaseClass):
 
         return use_backup_code
 
-    # def create_chanel(self):
-    #     pass
-
-    def __status(self):
-        # check uploading video and access rights
-        status_now = self.DRIVER.find_element(By.XPATH,
-                                              value='//span[@class="progress-label style-scope ytcp-video-upload-progress"]').text
-
-        if not status_now.split(".")[0] == "Checks complete":
-            time.sleep(random.uniform(.1, 1))
-            self.__status()
-
-    def __send_title(self, text=str):
-
-        if self.xpath_exists('//div[@id="textbox"]'):
-
-            title_elem = self.DRIVER.find_element(By.XPATH, value='//div[@id="textbox"]')
-            title_elem.clear()
-            title_elem.send_keys(text)
-
-            # if title not working, call error
-            if self.xpath_exists(
-                    '//ytcp-form-input-container[@class="invalid fill-height style-scope ytcp-social-suggestions-textbox style-scope ytcp-social-suggestions-textbox"]'):
-                raise FieldInvalidException("Title not filled in correctly.")
-
-        else:
-            raise NotFoundException("Title field not found.")
-
-    def __send_tags(self, hashtags=list):
-
-        # send tags on the textbox
-        if self.xpath_exists('//input[@aria-label="Tags"]'):
-            tags_elem = self.DRIVER.find_element(By.XPATH, value='//input[@aria-label="Tags"]')
-            tags_elem.clear()
-            hashtags.insert(0, "#shorts")
-            hashtags = tuple(hashtags)
-
-            act = ActionChains(self.DRIVER)
-
-            for tag in hashtags:
-                act.click(tags_elem)
-                act.perform()
-
-                tags_elem.send_keys(tag)
-                tags_elem.send_keys(Keys.ENTER)
-
-            if self.xpath_exists(
-                    '//ytcp-form-input-container[@class="style-scope ytcp-video-metadata-editor-advanced" and @invalid]'):
-                raise FieldInvalidException("Field for tags is filled incorrectly. Most likely you have a long tag.")
-
-        else:
-            NotFoundException("Tags field not found.")
-
-    def __send_feedback(self):
-        # send feedback
-        if self.xpath_exists('//button[@key="cancel"]'):
-            self.DRIVER.find_element(By.XPATH, value='//button[@key="cancel"]').click()
-
-    # press button "Upload video"
-    def __page1_upload_video(self, path_to_video=str):
-
-        # field for upload vidio on the youtube
-        if self.xpath_exists('//input[@type="file"]'):
-            self.DRIVER.find_element(By.XPATH, value='//input[@type="file"]').send_keys(path_to_video)
-        else:
-            input("Copy xpath: ")
-            # raise NotFoundException("Video was not uploaded, XPATH may be missing.")
-
-    def __page2_upload_video(self, title, tags):
-
-        # Check have limit today
-        if self.xpath_exists('//div[text()="Daily upload limit reached"]'):
-            raise LimitSpentException("Daily upload limit reached")
-
-        if self.xpath_exists('//div[text()="Processing abandoned"]'):
-            text_error = self.DRIVER.find_element(By.XPATH,
-                                                  value='//yt-formatted-string[@class="error-details style-scope ytcp-uploads-dialog"]').text
-            raise PreventedThisUpload(text_error)
-
-        self.__send_title(title)
-
-        # check exists the radio-button "for kids"
-        if self.xpath_exists('//tp-yt-paper-radio-button[@name="VIDEO_MADE_FOR_KIDS_MFK"]'):
-            # click on the radio-button "for kids"
-            self.DRIVER.find_element(By.XPATH, value='//tp-yt-paper-radio-button').click()
-
-            # open new param, pressed button "Show more"
-            if self.xpath_exists('//div[text()="Show more"]'):
-                self.DRIVER.find_element(By.XPATH, value='//div[text()="Show more"]').click()
-                time.sleep(random.uniform(.1, 1))
-
-            else:
-                raise NotFoundException('button "Show more" not found.')
-
-            # add tags
-            self.__send_tags(tags)
-
-        else:
-            raise NotFoundException('radio-button "VIDEO_MADE_FOR_KIDS_MFK" not found')
-
-        self.__status()
-
-        # select screensaver
-        if self.xpath_exists('//ytcp-still-cell[@id="still-0"]'):
-            self.DRIVER.find_element(By.XPATH, value='//ytcp-still-cell[@id="still-0"]').click()
-
-        # press button "Next"
-        if self.xpath_exists('//div[text()="Next"]'):
-            # from page "information" to "Adds"
-            self.DRIVER.find_element(By.XPATH, value='//div[text()="Next"]').click()
-
-        else:
-            self.__page2_upload_video(title, tags)
-
-    def __page3_upload_video(self):
-        # from page "Adds" to "Checker YouTube"
-        time.sleep(random.uniform(.1, 1))
-        if self.xpath_exists('//div[text()="Next"]'):
-            self.DRIVER.find_element(By.XPATH, value='//div[text()="Next"]').click()
-
-    def __page4_upload_video(self):
-
-        # from page "Checker YouTube" to access
-        time.sleep(random.uniform(.1, 1))
-
-        if self.xpath_exists('//div[text()="Next"]'):
-            self.DRIVER.find_element(By.XPATH, value='//div[text()="Next"]').click()
-
-    def __page5_upload_video(self):
-        # select radio-button public access
-        self.DRIVER.execute_script("window.onbeforeunload = function() {};")
-
-        time.sleep(random.uniform(.1, 1))
-        if self.xpath_exists('//tp-yt-paper-radio-button[@name="PUBLIC"]/div'):
-            self.DRIVER.find_element(By.XPATH, value='//tp-yt-paper-radio-button[@name="PUBLIC"]/div').click()
-            time.sleep(random.uniform(.1, 1))
-
-        self.__send_feedback()
-
-        # press button upload
-        if self.xpath_exists('//ytcp-button[@id="done-button"]'):
-            self.DRIVER.find_element(By.XPATH, value='//ytcp-button[@id="done-button"]').click()
-
-        self.__send_feedback()
-
-    def __press_button_upload(self):
-
-        # press button "upload video" on the studio YouTube
-        if self.xpath_exists('//ytcp-icon-button[@id="upload-icon"]'):
-            self.DRIVER.find_element(By.XPATH, value='//ytcp-icon-button[@id="upload-icon"]').click()
-
-        elif self.xpath_exists('//ytcp-button[@id="create-icon"]'):
-            self.DRIVER.find_element(By.XPATH, value='//ytcp-button[@id="create-icon"]').click()
-            self.click_element('//tp-yt-paper-item[@test-id="upload-beta"]')
-
-        else:
-            # raise NotFoundException('icon-button "upload-icon" not found.')
-            input("copy XPATH and press Enter: ")
-
-    def upload_video(self, path_to_file=str, title=str, tags=list):
-        """Upload shorts video on the YouTube"""
-        try:
-
-            self.__prepare_studio()
-            # press button "upload video" on the studio YouTube
-            self.__press_button_upload()
-
-            time.sleep(random.uniform(.1, 1))
-
-            # pass page #1 for uploaded video on the YouTube
-            self.__page1_upload_video(path_to_video=path_to_file)
-
-            self.__page2_upload_video(title=title, tags=tags)
-
-            self.__page3_upload_video()
-
-            self.__page4_upload_video()
-
-            self.__page5_upload_video()
-
-            self.__send_feedback()
-
-            time.sleep(random.uniform(1, 3))
-
-        except UnexpectedAlertPresentException:
-
-            time.sleep(random.uniform(2, 5))
-            pyautogui.press('tab')
-            time.sleep(random.uniform(.5, 1.4))
-            pyautogui.press('enter')
-
-            self.__send_feedback()
-
-            time.sleep(random.uniform(10, 15))
-
     def get_backup_code(self, login, password, backup_code):
         """
         This function gets your google account 8-digit backup codes.
@@ -399,3 +222,320 @@ class YouTube(BaseClass):
             backup_codes = [str(el.text).replace(" ", "") for el in self.DRIVER.find_elements(By.XPATH, '//div[@dir]')]
 
             return backup_codes
+
+    # def create_chanel(self):
+    #     pass
+
+    def __status(self):
+        # check uploading video and access rights
+
+        status_now = self.DRIVER.find_element(By.XPATH,
+                                              value='//span[@class="progress-label style-scope ytcp-video-upload-progress"]').text
+
+        while not status_now.split(".")[0] == "Checks complete":
+
+            time.sleep(random.uniform(2, 5))
+
+            if self.xpath_exists('//div[text()="Processing abandoned"]', 3):
+                text_error = self.DRIVER.find_element(By.XPATH,
+                                                      value='//yt-formatted-string[@class="error-details style-scope ytcp-uploads-dialog"]').text
+                raise PreventedThisUpload(text_error)
+
+            status_now = self.DRIVER.find_element(By.XPATH,
+                                                  value='//span[@class="progress-label style-scope ytcp-video-upload-progress"]').text
+
+    def __send_text_JS(self, element, massage):
+        self.DRIVER.execute_script(
+            f'''
+            const text = `{massage}`;
+            const dataTransfer = new DataTransfer();
+            dataTransfer.setData('text', text);
+            const event = new ClipboardEvent('paste', {{
+                clipboardData: dataTransfer,
+                bubbles: true
+            }});
+            arguments[0].dispatchEvent(event)
+            ''',
+            element)
+
+    def __send_title(self, text_title):
+
+        if self.xpath_exists('//div[@id="textbox"]'):
+
+            title_elem = WebDriverWait(self.DRIVER, 555).until(
+                EC.element_to_be_clickable((By.XPATH, '//div[@id="textbox"]')))
+            self.DRIVER.execute_script("arguments[0].scrollIntoView(true);", title_elem)
+            title_elem.click()
+            title_elem.clear()
+            time.sleep(random.uniform(.2, 1))
+
+            # fix Error ChromeDriver only supports characters in the BMP
+            # now you can send emoji
+            self.__send_text_JS(massage=text_title, element=title_elem)
+
+            # if title not working, call error
+            if self.xpath_exists(
+                    '//ytcp-form-input-container[@class="invalid fill-height style-scope ytcp-social-suggestions-textbox style-scope ytcp-social-suggestions-textbox"]',
+                    3):
+                raise FieldInvalidException("Title not filled in correctly.")
+
+        else:
+            raise NotFoundException("Title field not found.")
+
+    def __send_tags(self, hashtags):
+        # send tags on the textbox
+        if self.xpath_exists('//input[@aria-label="Tags"]'):
+            tags_elem = self.DRIVER.find_element(By.XPATH, value='//input[@aria-label="Tags"]')
+            self.DRIVER.execute_script("arguments[0].scrollIntoView(true);", tags_elem)
+            tags_elem.clear()
+            self.act.move_to_element(tags_elem).click().perform()
+            hashtags = ("shorts", *hashtags)
+
+            for tag in hashtags:
+                # self.__send_text_JS(massage=tag, element=tags_elem)
+                pyperclip.copy(tag)
+                self.act.key_down(Keys.CONTROL).send_keys("v").key_up(Keys.CONTROL).perform()
+                tags_elem.send_keys(Keys.ENTER)
+
+            if self.xpath_exists(
+                    '//ytcp-form-input-container[@class="style-scope ytcp-video-metadata-editor-advanced" and @invalid]',
+                    3):
+                raise FieldInvalidException(
+                    "Field for tags is filled incorrectly. Most likely you have a long tag.")
+        else:
+            NotFoundException("Tags field not found.")
+
+    def __send_feedback(self):
+        # send feedback
+        if self.xpath_exists('//button[@key="cancel"]', 1):
+            self.DRIVER.find_element(By.XPATH, '//button[@key="cancel"]').click()
+
+    # press button "Upload video"
+    def __page1_upload_video(self, *args):
+        if len(args) > 1:
+            paths = "\n".join(args)
+        else:
+            paths = str(args[0])
+
+        # field for upload vidio on the youtube
+        if self.xpath_exists('//input[@type="file"]'):
+            self.DRIVER.find_element(By.XPATH, value='//input[@type="file"]').send_keys(paths)
+            time.sleep(random.uniform(.5, 2))
+        else:
+            input("Copy xpath page 1: ")
+            # raise NotFoundException("Video was not uploaded, XPATH may be missing.")
+
+    def __page2_upload_video(self, title, tags):
+
+        # check exists the radio-button "for kids"
+        if self.xpath_exists('//tp-yt-paper-radio-button[@name="VIDEO_MADE_FOR_KIDS_MFK"]'):
+            # click on the radio-button "for kids"
+            WebDriverWait(self.DRIVER, 30).until(
+                EC.element_to_be_clickable((By.XPATH, '//tp-yt-paper-radio-button'))).click()
+
+            # open new param, pressed button "Show more"
+            if self.xpath_exists('//div[text()="Show more"]'):
+                self.DRIVER.find_element(By.XPATH, value='//div[text()="Show more"]').click()
+                time.sleep(random.uniform(.1, 1))
+
+            else:
+                raise NotFoundException('button "Show more" not found.')
+
+            # add title
+            self.__send_title(title)
+
+            # add tags
+            self.__send_tags(tags)
+
+        else:
+            raise NotFoundException('radio-button "VIDEO_MADE_FOR_KIDS_MFK" not found')
+
+        self.__status()
+
+        # select screensaver
+        if self.xpath_exists('//ytcp-still-cell[@id="still-0"]'):
+            self.DRIVER.find_element(By.XPATH, value='//ytcp-still-cell[@id="still-0"]').click()
+
+        # press button "Next"
+        if self.xpath_exists('//div[text()="Next"]'):
+            # from page "information" to "Adds"
+            self.DRIVER.find_element(By.XPATH, value='//div[text()="Next"]').click()
+
+        else:
+            self.__page2_upload_video(title, tags)
+
+    def __page3_upload_video(self):
+        # from page "Adds" to "Checker YouTube"
+        time.sleep(random.uniform(.2, 1))
+        if self.xpath_exists('//div[text()="Next"]'):
+            self.DRIVER.find_element(By.XPATH, value='//div[text()="Next"]').click()
+
+    def __page4_upload_video(self):
+
+        # from page "Checker YouTube" to access
+        time.sleep(random.uniform(.2, 1))
+
+        if self.xpath_exists('//div[text()="Next"]'):
+            self.DRIVER.find_element(By.XPATH, value='//div[text()="Next"]').click()
+
+    def __page5_upload_video(self):
+        # select radio-button public access
+        time.sleep(random.uniform(.2, 1))
+        if self.xpath_exists('//tp-yt-paper-radio-button[@name="PUBLIC"]/div'):
+            self.DRIVER.find_element(By.XPATH, value='//tp-yt-paper-radio-button[@name="PUBLIC"]/div').click()
+
+            self.__send_feedback()
+
+        # press button upload
+        if self.xpath_exists('//ytcp-button[@id="done-button"]'):
+            self.DRIVER.find_element(By.XPATH, value='//ytcp-button[@id="done-button"]').click()
+
+            self.__send_feedback()
+
+        time.sleep(random.uniform(3, 5))
+        self.__close_popups()
+
+    def __close_popups(self):
+        # if new icon close (2way)
+        if self.xpath_exists('//ytcp-button[@id="close-button"]/div', 555):
+            self.click_element('//ytcp-button[@id="close-button"]/div')
+        else:
+            input("Copy Close: ")
+
+    def __press_button_upload(self):
+
+        # press button "upload video" on the studio YouTube
+        if self.xpath_exists('//ytcp-icon-button[@id="upload-icon"]'):
+            WebDriverWait(self.DRIVER, 20).until(
+                EC.element_to_be_clickable((By.XPATH, '//ytcp-icon-button[@id="upload-icon"]'))).click()
+
+        elif self.xpath_exists('//ytcp-button[@id="create-icon"]'):
+            WebDriverWait(self.DRIVER, 20).until(
+                EC.element_to_be_clickable((By.XPATH, '//ytcp-button[@id="create-icon"]'))).click()
+            WebDriverWait(self.DRIVER, 20).until(
+                EC.element_to_be_clickable((By.XPATH, '//tp-yt-paper-item[@test-id="upload-beta"]'))).click()
+
+        else:
+            input('New xpath. Copy xpath and send me.[upload button] :')
+
+    def __filling_info(self, title, tags):
+        try:
+            self.__page2_upload_video(title=title, tags=tags)
+
+            self.__page3_upload_video()
+
+            self.__page4_upload_video()
+
+            self.__page5_upload_video()
+
+            self.__send_feedback()
+
+        except UnexpectedAlertPresentException:
+            print("Catch alert, please wait")
+
+            try:
+                WebDriverWait(self.DRIVER, 3).until(EC.alert_is_present())
+                alert = Alert(self.DRIVER)
+                time.sleep(random.uniform(4, 8))
+                alert.accept()
+
+            except TimeoutException:
+                self.__send_feedback()
+
+                # clear alert
+                self.DRIVER.execute_script("window.onbeforeunload = function() {};")
+                time.sleep(random.uniform(.2, 1))
+
+                self.__send_feedback()
+
+            self.__page5_upload_video()
+
+    @staticmethod
+    def _sort_info(*args):
+        paths_to_video = ()
+        titles = ()
+        tags = ()
+
+        for arg in args:
+            path, title, *tag = arg
+            paths_to_video = (*paths_to_video, path)
+            titles = (*titles, title)
+            tags = *tags, tag
+
+        # return meta_videos
+        return paths_to_video, titles, tags
+
+    def upload_video(self, *args):
+        """
+        Upload shorts video on the YouTube
+        example:
+        path/to/video.mp4, "title", tags1, tags2, tags3, ... tagsN
+        or
+        (path_to_video, title, tags1, tags2, .... tagsN), (path_to_video, title, tags .... tagsN), ...
+        Alert "Sorry, we were not able to save your video."
+
+        """
+        paths_video, titles, tags = YouTube._sort_info(*args)
+        self.__prepare_studio()
+        # press button "upload video" on the studio YouTube
+        self.__press_button_upload()
+
+        self.__page1_upload_video(*paths_video)
+
+        # Check have limit today
+        if self.xpath_exists(
+                '//span[@id="progress-status-0" and contains(text(), "Daily upload limit reached")]',
+                3) or self.xpath_exists('//div[text()="Daily upload limit reached"]', wait=3):
+            raise LimitSpentException("Daily upload limit reached")
+
+        # check if window exists
+        if self.xpath_exists('//ytcp-multi-progress-monitor/tp-yt-paper-dialog', 10):
+            # to get button to fill field
+            # self.DRIVER.implicitly_wait(10)
+            # elements_video = self.DRIVER.find_elements(By.XPATH, '//ul[@id="progress-list"]/li')
+
+            for count, path_video in enumerate(paths_video):
+                # if upload fail close browser
+                if not self.xpath_exists(
+                        f'//span[@id="progress-status-{count}" and contains(text(), "Daily upload limit reached")]', 3):
+                    video_name = path_video.split("\\")[-1]
+
+                    try:
+                        WebDriverWait(self.DRIVER, 20).until(EC.element_to_be_clickable(
+                            (By.XPATH, f'//button[@aria-label="Edit video {video_name}"]'))).click()
+
+                        # execute filling form
+                        try:
+                            self.__filling_info(titles[count], tags[count])
+                        except PreventedThisUpload:
+                            self.DRIVER.find_element('//ytcp-icon-button[@aria-label="Save and close"]').click()
+                            print(
+                                f'YouTube prevented this upload because it’s a copy of a video "{video_name}" we removed in the past.')
+                            continue
+
+                    except UnexpectedAlertPresentException:
+                        self.DRIVER.execute_script("window.onbeforeunload = function() {};")
+                        self.__page5_upload_video()
+                        continue
+                else:
+                    raise LimitSpentException("Daily upload limit reached")
+
+            # Everything video uploaded and close browser
+            while True:
+                if self.xpath_exists('//span[text()="Uploads complete"]'):
+                    break
+                else:
+                    time.sleep(random.uniform(5, 10))
+
+        else:
+            # unpicking tuple
+            titles = titles[0]
+            tags = tags[0]
+
+            # upload 1 video
+            try:
+                self.__filling_info(titles, tags)
+
+            except UnexpectedAlertPresentException:
+                self.DRIVER.execute_script("window.onbeforeunload = function() {};")
+                self.__page5_upload_video()

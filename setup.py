@@ -7,7 +7,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 with codecs.open(os.path.join(here, "README.md"), encoding="utf-8") as fh:
     long_description = "\n" + fh.read()
 
-VERSION = '3.5'
+VERSION = '3.7'
 DESCRIPTION = 'Upload shorts video to the YouTube channel(Selenium)(without API owned by Youtube)'
 LONG_DESCRIPTION = "It doesn't use API owned by Youtube. Made on the basis of the Selenium(undetected_chromedriver)"
 
@@ -21,7 +21,7 @@ setup(
     long_description_content_type="text/markdown",
     long_description=long_description,
     packages=find_packages(),
-    install_requires=['undetected_chromedriver', "pyperclip", "pyautogui"],
+    install_requires=['undetected_chromedriver', "pyperclip"],
     keywords=['python', 'selenium', 'youtube studio', 'youtube', 'api', 'upload', 'video', 'shorts video',
               'auth google', 'undetected_chromedriver', "uc", "api_youtube_uc", "api_youtube", "youtube_api",
               "api youtube", "youtube api"],

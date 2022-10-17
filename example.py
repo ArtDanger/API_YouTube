@@ -9,7 +9,10 @@ def main():
             youtube_api.get_backup_code("your_email@gmail.com", "Your password", "backup_code")  # gets list backup codes
 
         # upload video on the YouTube
-        youtube_api.upload_video(r"path\to\video.mp4", 'Name video', ["#first_tag", "#second_tag"])
+        youtube_api.upload_video(r"path/to/video.mp4", "title", "tags1", "tags2", "tags3", "...", "tagsN")
+
+        # old version
+        # youtube_api.upload_video(r"path\to\video.mp4", 'Name video', ["#first_tag", "#second_tag"])
 
 
 if __name__ == '__main__':

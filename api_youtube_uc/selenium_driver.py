@@ -5,6 +5,8 @@ import os
 import undetected_chromedriver as uc
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 from .exceptions import *
 
@@ -83,10 +85,9 @@ class BaseClass:
 
         return self.DRIVER
 
-    def xpath_exists(self, xpath):
-
+    def xpath_exists(self, xpath, wait=30):
         try:
-            self.DRIVER.implicitly_wait(15)
+            self.DRIVER.implicitly_wait(wait)
             self.DRIVER.find_element(By.XPATH, value=xpath)
             exist = True
         except NoSuchElementException:
@@ -98,5 +99,6 @@ class BaseClass:
 
         if self.xpath_exists(xpath):
             self.DRIVER.find_element(By.XPATH, value=xpath).click()
+            # self.DRIVER.execute_script("arguments[0].click();", button)
         else:
-            input("New xpath. Copy xpath and send me.")
+            input("New xpath. Copy xpath and send me. [click_elem]")
