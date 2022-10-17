@@ -10,7 +10,7 @@ See `example_3.7.py`
 
 ## **3.5** Version
 
-Add upload profile. 
+Add upload profile.<br/> 
 See `example_profile.py`
 
 ## **3.4** Version
